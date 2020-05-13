@@ -5,7 +5,6 @@ Created on Tue May 12 21:52:28 2020
 @author: yoelr
 """
 import numpy as np
-from ._predictor import Predictor
 
 __all__ = ('MultiPredictor',)
 
@@ -19,13 +18,13 @@ class MultiPredictor:
         for predictor, yi in zip(self.predictors, y.transpose()): predictor.fit(X, yi)
         
     def predict(self, xs):
-        return np.array([i.predict(xs) for i in self.predictors], float)
+        return np.array([i.predict(xs) for i in self.predictors], float).transpose()
     
     @property
     def metrics(self):
         return [i.metric for i in self.predictors]
     
     def __repr__(self):
-        names = ', '.join(self.metrics)
+        names = ', '.join([str(i) for i in self.metrics])
         return f"<{type(self).__name__}: {names}>"
         
