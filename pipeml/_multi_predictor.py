@@ -13,16 +13,13 @@ class MultiPredictor:
     __slots__ = ('predictors',)
     
     def __init__(self, predictors):
-        isa = isinstance
-        for i in predictors:
-            assert isa(i, Predictor), "all elemenents must be a Predictor object"
         self.predictors = predictors
         
     def fit(self, X, y):
         for predictor, yi in zip(self.predictors, y.transpose()): predictor.fit(X, yi)
         
-    def __call__(self, xs):
-        return np.array([i(xs) for i in self.predictors], float)
+    def predict(self, xs):
+        return np.array([i.predict(xs) for i in self.predictors], float)
     
     @property
     def metrics(self):

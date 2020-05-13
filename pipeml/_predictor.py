@@ -5,17 +5,15 @@ Created on Tue May 12 22:20:36 2020
 @author: yoelr
 """
 
+__all__ = ('Predictor',)
 
 class Predictor:
-    __slots__ = ('function', 'fit', 'metric')
+    __slots__ = ('predict', 'fit', 'metric')
     
-    def __init__(self, metric, function, fit=None):
+    def __init__(self, metric, predict, fit):
         self.metric = metric
-        self.function = function
-        self.fit = fit or function.fit
-      
-    def __call__(self, xs):
-        return self.function(xs)
+        self.predict = predict
+        self.fit = fit
     
     def __repr__(self):
         return f"<{type(self).__metric__}: {self.metric}>"

@@ -4,9 +4,9 @@ Created on Tue May 12 23:02:00 2020
 
 @author: yoelr
 """
-__all__ = ('Normalizer',)
+__all__ = ('Denormalizer',)
 
-class Normalizer:
+class Denormalizer:
     __slots__ = ('width', 'minimum')
     
     def __init__(self, width, minimum):
@@ -23,12 +23,14 @@ class Normalizer:
         minimum = X.min(axis=axis, keepdims=True)
         width = maximum - minimum
         return cls(width, minimum)
-        
-    def __call__(self, X):
+    
+    def scale(self, X):
         return (X - self.minimum) / self.width
     
     def unscale(self, X):
         return (X * self.width) + self.minimum
+    
+    __call__ = unscale
     
     def __repr__(self):
         return f"<{type(self).__name__}>"

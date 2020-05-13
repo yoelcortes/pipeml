@@ -6,7 +6,7 @@ Created on Tue May 12 18:37:59 2020
 """
 import numpy as np
 from ._rescaler import Rescaler
-from ._normalizer import Normalizer
+from ._denormalizer import Denormalizer
 from ._predictor import Predictor
 from ._multi_predictor import MultiPredictor
 
@@ -22,6 +22,7 @@ class FittedModel:
     def __init__(self, predictor, preprocessor, postprocessor, bounds=None, features=None):
         self.predictor = predictor
         self.preprocessor = preprocessor
+        self.postprocessor = postprocessor
         self.bounds = bounds
         self.features = features
         
@@ -29,7 +30,8 @@ class FittedModel:
         xs = np.asarray(xs, float)
         if check_bounds: self.check_bounds(xs)
         xs = self.preprocessor(xs)
-        return self.predictor(xs)
+        ys = self.predictor.predict(xs)
+        return self.postprocessor(ys)
     
     @property
     def predictor(self):
@@ -55,11 +57,18 @@ class FittedModel:
         y = ydf.values
         preprocessor = Rescaler.from_data(X)
         X = preprocessor(X)
-        postprocessor = Normalizer.from_data(y)
-        y = postprocessor(y)
+        postprocessor = Denormalizer.from_data(y)
+        y = postprocessor.scale(y)
         if not ML: from sklearn.svm import SVR as ML
-        predictors = [Predictor(col, ML()) for col in ydf]
-        predictor = MultiPredictor(predictors)
+        if ydf.ndim == 1:
+            predictor = Predictor(ydf.name, ML())
+        else:
+            def create_predictor(metric):
+                ml = ML()
+                ml.metric = metric
+                return ml
+            predictors = [create_predictor(col) for col in ydf]
+            predictor = MultiPredictor(predictors)
         predictor.fit(X, y)
         if not features: features = tuple(Xdf)
         self = cls(predictor, preprocessor, postprocessor, bounds, features)
@@ -67,7 +76,7 @@ class FittedModel:
     
     def check_bounds(self, xs):
         bounds = self.bounds
-        if not bounds: return
+        if bounds is None: return
         names = self.features
         if names:
             for name, xi, (lb, ub) in zip(names, xs.transpose(), bounds):
@@ -79,11 +88,11 @@ class FittedModel:
             
     def __repr__(self):
         newline = "\n" + " " * len(" metrics: ")
-        metric_info = newline.join(self.metrics)
+        metric_info = newline.join([str(i) for i in self.metrics])
         features = self.features
         if features:
             newline = "\n" + " " * len(" features: ")
-            feature_info = newline.join()
+            feature_info = newline.join([str(i) for i in features])
         else:
             feature_info = "?"
         return (f"{type(self).__name__}:\n"
