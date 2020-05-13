@@ -6,7 +6,6 @@ Created on Mon Nov 11 07:38:24 2019
 """
 __all__ = ('Rescaler',)
 
-
 class Rescaler:
     __slots__ = ('mean', 'std', 'scale')
     
